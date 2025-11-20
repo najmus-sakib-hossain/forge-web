@@ -1,3 +1,15 @@
+//! Tool lifecycle management
+//!
+//! Manages the lifecycle of DX tools including starting, stopping, and monitoring their status.
+
+use anyhow::{anyhow, Result};
+use chrono::{DateTime, Utc};
+use std::collections::HashMap;
+use tokio::sync::broadcast;
+use tokio::task::JoinHandle;
+use uuid::Uuid;
+
+use crate::orchestrator::DxTool;
 
 /// Unique identifier for a tool instance
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]

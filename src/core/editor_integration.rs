@@ -118,8 +118,8 @@ impl EditorIntegration {
     
     /// Set output strategy
     pub fn set_output_strategy(&mut self, strategy: OutputStrategy) {
-        self.output_strategy = strategy;
         tracing::info!("Output strategy changed to: {:?}", strategy);
+        self.output_strategy = strategy;
     }
     
     /// Get current output strategy

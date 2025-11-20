@@ -3,10 +3,20 @@
 ## Phase 1: Core Library Restructuring
 - [/] Refactor `dx-forge` into a reusable Rust crate library
   - [x] Review current [lib.rs](file:///f:/Code/forge/src/lib.rs) public API surface
-  - [/] Design clean public API for external DX tools (see implementation_plan.md)
-  - [ ] Separate CLI binaries from core library functionality
-  - [ ] Ensure all core types are properly exported
+  - [x] Design clean public API for external DX tools (see implementation_plan.md)
+  - [x] Separate CLI binaries from core library functionality
+ - [/] Ensure all core types are properly exported (fixing compilation errors)
   - [ ] Add comprehensive documentation for public APIs
+  
+## Implementation Progress (Phase 1)
+- [x] Created `core` module structure (`src/core/`)
+- [x] Implemented `Forge` struct with unified API
+- [x] Implemented `LifecycleManager` for tool state management
+- [x] Implemented `GeneratedCodeTracker` for file tracking
+- [x] Implemented `EditorIntegration` for VSCode detection
+- [x] Reorganized `version` module into `types.rs` and `registry.rs`
+- [x] Updated `lib.rs` with new public exports
+- [/] Fixing compilation errors (minor issues with borrows and missing methods)
 
 ## Phase 2: DX Tools Lifecycle Management
 - [ ] Implement start/stop control for DX tools
@@ -25,7 +35,7 @@
 
 ## Phase 3: Git-like Versioning System
 - [ ] Version control features
-  - [x] Review current version management ([version.rs](file:///f:/Code/forge/src/version.rs))
+  - [x] Review current version management (`version.rs`)
   - [ ] Implement commit-like snapshots for tool state
   - [ ] Add branching support for traffic branches
   - [ ] Implement merge strategies (green, yellow, red)
@@ -47,7 +57,7 @@
   - [ ] Track dependencies between generated files
   
 - [ ] Component injection system
-  - [x] Review current injection manager ([injection.rs](file:///f:/Code/forge/src/injection.rs))
+  - [x] Review current injection manager (`injection.rs`)
   - [ ] Enhance R2 component fetching
   - [ ] Add local development fallback
   - [ ] Implement cache invalidation strategies
@@ -55,7 +65,7 @@
 
 ## Phase 5: File Change Detection
 - [ ] Dual-watcher architecture improvements
-  - [x] Review current watcher implementation ([watcher.rs](file:///f:/Code/forge/src/watcher.rs))
+  - [x] Review current watcher implementation (`watcher.rs`)
   - [ ] Enhance file system watcher with debouncing
   - [ ] Add ignore patterns (.gitignore support)
   - [ ] Implement efficient directory traversal
