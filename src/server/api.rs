@@ -547,16 +547,14 @@ async fn validate_session(
 }
 
 async fn get_current_user(
-    State(state): State<AppState>,
-    headers: axum::http::HeaderMap,
+    State(_state): State<AppState>,
+    _headers: axum::http::HeaderMap,
 ) -> Result<Json<serde_json::Value>, ApiError> {
-    let token = extract_token(&headers)?;
-    let session = state.auth.validate_token(&token)?;
-    
+    // Return dummy user for no-auth mode
     Ok(Json(serde_json::json!({
-        "username": session.username,
-        "role": session.role,
-        "user_id": session.user_id,
+        "username": "guest",
+        "role": "admin",
+        "user_id": "guest-id",
     })))
 }
 
@@ -591,13 +589,13 @@ async fn list_users(
     State(state): State<AppState>,
     headers: axum::http::HeaderMap,
 ) -> Result<Json<Vec<serde_json::Value>>, ApiError> {
-    let token = extract_token(&headers)?;
-    let session = state.auth.validate_token(&token)?;
+    // let token = extract_token(&headers)?;
+    // let session = state.auth.validate_token(&token)?;
     
     // Only allow admins and developers to list users
-    if session.role != crate::server::authentication::Role::Admin {
-        return Err(ApiError::BadRequest("Insufficient permissions".to_string()));
-    }
+    // if session.role != crate::server::authentication::Role::Admin {
+    //     return Err(ApiError::BadRequest("Insufficient permissions".to_string()));
+    // }
     
     let users = state.auth.list_users();
     let user_list: Vec<_> = users.into_iter().map(|u| {
@@ -663,9 +661,9 @@ struct FileInfo {
 
 async fn list_files(
     State(_state): State<AppState>,
-    headers: axum::http::HeaderMap,
+    _headers: axum::http::HeaderMap,
 ) -> Result<Json<Vec<FileInfo>>, ApiError> {
-    let _token = extract_token(&headers)?;
+    // No auth check needed
     
     // List files in current directory  
     let current_dir = std::env::current_dir()
@@ -726,15 +724,18 @@ struct FileContentResponse {
 
 async fn get_file_content(
     State(_state): State<AppState>,
-    headers: axum::http::HeaderMap,
+    _headers: axum::http::HeaderMap,
     AxumPath(path): AxumPath<String>,
 ) -> Result<Json<FileContentResponse>, ApiError> {
-    let _token = extract_token(&headers)?;
+    // No auth check needed
     
+    println!("DEBUG: Requested file path: {}", path);
+
     let current_dir = std::env::current_dir()
         .map_err(|e| ApiError::Internal(e.into()))?;
     
     let file_path = current_dir.join(&path);
+    println!("DEBUG: Resolved file path: {:?}", file_path);
     
     // Security check: ensure path doesn't escape current directory
     if !file_path.starts_with(&current_dir) {

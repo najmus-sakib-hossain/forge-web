@@ -2,8 +2,8 @@
 
 // State management
 const state = {
-    token: localStorage.getItem('forge_token'),
-    user: null,
+    token: "guest",
+    user: { username: "guest", role: "admin" },
     ws: null,
     currentPath: '',
     currentFile: null,
@@ -12,12 +12,11 @@ const state = {
 };
 
 // Initialize application
+// Initialize application
 document.addEventListener('DOMContentLoaded', () => {
-    if (state.token) {
-        validateTokenAndInit();
-    } else {
-        showLoginPage();
-    }
+    // Bypass login
+    state.token = "guest";
+    initApp();
 });
 
 // Login functionality
