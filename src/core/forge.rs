@@ -191,49 +191,6 @@ impl Forge {
     ///         Ok(dx_forge::ToolOutput::success())
     ///     }
     /// }
-    ///
-    /// # async fn example() -> anyhow::Result<()> {
-    /// let mut forge = Forge::new(".")?;
-    /// let tool_id = forge.register_tool(Box::new(MyTool))?;
-    /// # Ok(())
-    /// # }
-    /// ```
-    pub fn register_tool(&mut self, tool: Box<dyn DxTool>) -> Result<ToolId> {
-        let name = tool.name().to_string();
-        let version_str = tool.version().to_string();
-        
-        // Register in orchestrator
-        self.orchestrator.write().register_tool(tool.clone());
-        
-        // Register in lifecycle manager
-        let tool_id = self.lifecycle_manager.write().register_tool(tool)?;
-        
-        // Register in tool registry
-        if let Ok(version) = version_str.parse::<Version>() {
-            let mut registry = self.registry.write();
-            if !registry.is_registered(&name) {
-                registry.register(
-                    name,
-                    version,
-                    crate::version::ToolSource::Local(self.config.project_root.clone()),
-                    std::collections::HashMap::new(),
-                )?;
-            }
-        }
-        
-        tracing::info!("Registered tool: {} (id: {:?})", name, tool_id);
-        Ok(tool_id)
-    }
-    
-    /// Start a registered tool
-    pub async fn start_tool(&mut self, id: ToolId) -> Result<()> {
-        self.lifecycle_manager.write().start_tool(id).await
-    }
-    
-    /// Stop a running tool
-    pub async fn stop_tool(&mut self, id: ToolId) -> Result<()> {
-        self.lifecycle_manager.write().stop_tool(id).await
-    }
     
     /// Get the current status of a tool
     pub fn get_tool_status(&self, id: ToolId) -> Option<ToolStatus> {

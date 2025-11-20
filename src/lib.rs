@@ -86,6 +86,9 @@ pub mod server;
 pub mod storage;
 pub mod sync;
 
+// Core library - NEW unified API
+pub mod core;
+
 // Legacy watcher module (for CLI compatibility)
 #[path = "watcher_legacy/mod.rs"]
 pub mod watcher_legacy;
@@ -105,7 +108,21 @@ pub mod auto_update;
 pub mod profiler;
 pub mod cache;
 
+// ========================================================================
+// Primary Public API - Forge Unified Interface
+// ========================================================================
+
+pub use core::{
+    Forge, ForgeConfig,
+    LifecycleEvent, ToolId, ToolStatus,
+    EditorInfo, EditorType, OutputStrategy,
+    GeneratedFileInfo,
+};
+
+// ========================================================================
 // Re-export orchestration types (public API)
+// ========================================================================
+
 pub use orchestrator::{
     Conflict, DxTool, ExecutionContext, Orchestrator, OrchestratorConfig, ToolOutput,
     TrafficAnalyzer, TrafficBranch,
@@ -113,23 +130,33 @@ pub use orchestrator::{
 
 pub use watcher::{ChangeKind, ChangeSource, DualWatcher, FileChange, FileWatcher, LspWatcher};
 
+// ========================================================================
 // Re-export storage types
+// ========================================================================
+
 pub use context::{ComponentStateManager, UpdateResult};
 pub use crdt::{Operation, OperationType, Position};
 pub use storage::{Database, OperationLog};
 
+// ========================================================================
 // Re-export DX tools support types
+// ========================================================================
+
 pub use version::{ToolInfo, ToolRegistry, ToolSource, Version, VersionReq};
 pub use patterns::{DxToolType, PatternDetector, PatternMatch};
 pub use injection::{CacheStats, ComponentMetadata, InjectionManager};
 pub use error::{categorize_error, EnhancedError, EnhancedResult, ErrorCategory, RetryPolicy, ToEnhanced, with_retry};
 
-// Legacy exports (deprecated in favor of new watcher module)
-#[deprecated(since = "1.0.0", note = "use `watcher::DualWatcher` instead")]
+// ========================================================================
+// Legacy exports (deprecated in favor of new Forge API)
+// ========================================================================
+
+#[deprecated(since = "1.0.0", note = "use `Forge` instead")]
 pub use watcher::DualWatcher as ForgeWatcher;
 
 /// Library version
 pub const VERSION: &str = env!("CARGO_PKG_VERSION");
+
 // Testing forge logging
 // test logging
 // test event

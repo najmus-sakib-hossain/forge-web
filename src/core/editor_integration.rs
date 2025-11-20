@@ -3,7 +3,6 @@
 //! Provides functionality to detect VSCode extension presence and determine
 //! where to output generated files.
 
-use anyhow::Result;
 use std::path::PathBuf;
 
 /// Type of code editor
