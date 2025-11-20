@@ -176,15 +176,15 @@ pub async fn serve(port: u16, path: PathBuf) -> Result<()> {
         // User management endpoints
         .route("/api/v1/users", get(list_users))
         .route("/api/v1/users", post(create_user))
-        .route("/api/v1/users/:username", delete(delete_user))
+        .route("/api/v1/users/{username}", delete(delete_user))
         // File browser endpoints
         .route("/api/v1/files", get(list_files))
-        .route("/api/v1/files/*path", get(get_file_content))
+        .route("/api/v1/files/{*path}", get(get_file_content))
         // Blob endpoints (if R2 is configured)
         .route("/api/v1/blobs", post(upload_blob))
-        .route("/api/v1/blobs/:hash", get(download_blob))
-        .route("/api/v1/blobs/:hash", delete(delete_blob_handler))
-        .route("/api/v1/blobs/:hash/exists", get(check_blob_exists))
+        .route("/api/v1/blobs/{hash}", get(download_blob))
+        .route("/api/v1/blobs/{hash}", delete(delete_blob_handler))
+        .route("/api/v1/blobs/{hash}/exists", get(check_blob_exists))
         .route("/api/v1/blobs/batch", post(batch_upload))
         // CORS for web clients
         .layer(
@@ -199,7 +199,7 @@ pub async fn serve(port: u16, path: PathBuf) -> Result<()> {
     println!(
         "{} Server running at {}",
         "✓".green(),
-        format!("http://{}", addr).bright_blue()
+        format!("http://localhost:{}", port).bright_blue()
     );
 
     let listener = tokio::net::TcpListener::bind(&addr).await?;

@@ -61,13 +61,13 @@ struct Cli {
 enum Commands {
     /// Initialize a new Forge repository
     Init {
-        #[arg(short, long, default_value = ".")]
+        #[arg(default_value = ".")]
         path: PathBuf,
     },
 
     /// Watch for changes and track operations
     Watch {
-        #[arg(short, long, default_value = ".")]
+        #[arg(default_value = ".")]
         path: PathBuf,
 
         /// Enable real-time sync
@@ -120,7 +120,7 @@ enum Commands {
 
     /// Sync Forge repository
     ForgeSync {
-        #[arg(short, long, default_value = ".")]
+        #[arg(default_value = ".")]
         path: PathBuf,
     },
 
@@ -133,7 +133,7 @@ enum Commands {
         #[arg(short, long, default_value = "3000")]
         port: u16,
 
-        #[arg(long, default_value = ".")]
+        #[arg(default_value = ".")]
         path: PathBuf,
     },
 
