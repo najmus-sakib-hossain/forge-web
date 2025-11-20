@@ -13,18 +13,18 @@ use crate::injection::InjectionManager;
 use super::lifecycle::{LifecycleManager, ToolId, ToolStatus};
 use super::tracking::GeneratedCodeTracker;
 use super::editor_integration::EditorIntegration;
-use crate::orchestrator::DxTool;
+
 
 /// Main Forge instance - provides unified API for DX tools
 pub struct Forge {
     config: ForgeConfig,
-    orchestrator: Arc<RwLock<Orchestrator>>,
+    _orchestrator: Arc<RwLock<Orchestrator>>,
     watcher: Option<Arc<RwLock<DualWatcher>>>,
     registry: Arc<RwLock<ToolRegistry>>,
-    injection_manager: Arc<RwLock<InjectionManager>>,
+    _injection_manager: Arc<RwLock<InjectionManager>>,
     lifecycle_manager: Arc<RwLock<LifecycleManager>>,
     code_tracker: Arc<RwLock<GeneratedCodeTracker>>,
-    editor_integration: Arc<RwLock<EditorIntegration>>,
+    _editor_integration: Arc<RwLock<EditorIntegration>>,
 }
 
 /// Configuration for Forge instance
@@ -111,13 +111,14 @@ impl Forge {
         
         // Initialize components
         let orchestrator_config = OrchestratorConfig {
-            repo_root: config.project_root.clone(),
-            forge_path: config.forge_dir.clone(),
-            max_parallel: config.worker_threads,
+            parallel: false,
+            fail_fast: true,
+            max_concurrent: config.worker_threads,
+            traffic_branch_enabled: true,
         };
         
         let orchestrator = Arc::new(RwLock::new(
-            Orchestrator::with_config(orchestrator_config)
+            Orchestrator::with_config(config.project_root.clone(), orchestrator_config)
                 .context("Failed to initialize orchestrator")?,
         ));
         
@@ -142,7 +143,7 @@ impl Forge {
         
         // Initialize watcher if auto_watch is enabled
         let watcher = if config.auto_watch {
-            let dual_watcher = DualWatcher::new(&config.project_root)
+            let dual_watcher = DualWatcher::new()
                 .context("Failed to initialize file watcher")?;
             Some(Arc::new(RwLock::new(dual_watcher)))
         } else {
@@ -151,13 +152,13 @@ impl Forge {
         
         Ok(Self {
             config,
-            orchestrator,
+            _orchestrator: orchestrator,
             watcher,
             registry,
-            injection_manager,
+            _injection_manager: injection_manager,
             lifecycle_manager,
             code_tracker,
-            editor_integration,
+            _editor_integration: editor_integration,
         })
     }
     
@@ -209,8 +210,9 @@ impl Forge {
     /// Start watching a directory for changes
     pub async fn watch_directory(&mut self, path: impl AsRef<Path>) -> Result<()> {
         if let Some(watcher) = &self.watcher {
-            watcher.write().start(path).await?;
-            tracing::info!("Started watching directory: {:?}", path.as_ref());
+            let path_ref = path.as_ref();
+            watcher.write().start(path_ref).await?;
+            tracing::info!("Started watching directory: {:?}", path_ref);
             Ok(())
         } else {
             anyhow::bail!("File watching is disabled in configuration")
@@ -229,7 +231,7 @@ impl Forge {
     /// Stop file watching
     pub async fn stop_watching(&mut self) -> Result<()> {
         if let Some(watcher) = &self.watcher {
-            watcher.write().stop()?;
+            watcher.write().stop().await?;
             tracing::info!("Stopped file watching");
             Ok(())
         } else {
@@ -289,7 +291,7 @@ impl Forge {
 impl Drop for Forge {
     fn drop(&mut self) {
         // Cleanup: stop all running tools
-        if let Ok(mut lifecycle) = self.lifecycle_manager.try_write() {
+        if let Some(mut lifecycle) = self.lifecycle_manager.try_write() {
             if let Err(e) = lifecycle.stop_all() {
                 tracing::error!("Failed to stop all tools during cleanup: {}", e);
             }

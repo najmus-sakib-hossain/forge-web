@@ -587,7 +587,7 @@ fn extract_token(headers: &axum::http::HeaderMap) -> Result<String, ApiError> {
 
 async fn list_users(
     State(state): State<AppState>,
-    headers: axum::http::HeaderMap,
+    _headers: axum::http::HeaderMap,
 ) -> Result<Json<Vec<serde_json::Value>>, ApiError> {
     // let token = extract_token(&headers)?;
     // let session = state.auth.validate_token(&token)?;
