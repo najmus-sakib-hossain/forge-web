@@ -188,19 +188,20 @@ function renderFileTree(files) {
         `;
 
         if (!file.is_dir) {
-            item.addEventListener('click', () => loadFile(file.path));
+            item.addEventListener('click', (e) => loadFile(file.path, e.currentTarget));
         }
 
         treeEl.appendChild(item);
     });
 }
 
-async function loadFile(path) {
+async function loadFile(path, element) {
     const contentEl = document.getElementById('file-content');
     const nameEl = document.getElementById('file-name');
 
     contentEl.innerHTML = '<div class="loading">Loading file...</div>';
-    nameEl.textContent = path.split('/').pop();
+    // Handle both forward and backward slashes for display
+    nameEl.textContent = path.split(/[/\\]/).pop();
 
     try {
         const response = await fetch(`/api/v1/files/${encodeURIComponent(path)}`, {
@@ -216,7 +217,11 @@ async function loadFile(path) {
             document.querySelectorAll('.file-item').forEach(item => {
                 item.classList.remove('selected');
             });
-            event.currentTarget.classList.add('selected');
+            if (element) {
+                element.classList.add('selected');
+            }
+        } else {
+            contentEl.innerHTML = `<div class="error">Failed to load file: Server returned ${response.status}</div>`;
         }
     } catch (error) {
         contentEl.innerHTML = '<div class="error">Failed to load file</div>';
