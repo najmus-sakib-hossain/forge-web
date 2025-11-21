@@ -120,6 +120,7 @@ sha2 = "0.10.9"
 # Username
 whoami = "1.5.2"
 windows-sys = { version = "0.59.0", features = ["Win32_Storage_FileSystem"] }
+dirs = "5.0.1"
 
 # Logging
 tracing-subscriber = { version = "0.3", features = ["env-filter", "fmt"] }

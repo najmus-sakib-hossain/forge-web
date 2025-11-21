@@ -89,6 +89,11 @@ pub mod sync;
 // Core library - NEW unified API
 pub mod core;
 
+// ========================================================================
+// The 132 Eternal API Functions (v0.1.0)
+// ========================================================================
+pub mod api;
+
 // Legacy watcher module (for CLI compatibility)
 #[path = "watcher_legacy/mod.rs"]
 pub mod watcher_legacy;
@@ -159,6 +164,121 @@ pub use watcher::DualWatcher as ForgeWatcher;
 
 /// Library version
 pub const VERSION: &str = env!("CARGO_PKG_VERSION");
+
+// ========================================================================
+// Re-export The 132 Eternal API Functions
+// ========================================================================
+
+// Core Lifecycle & System Orchestration (4 functions)
+pub use api::lifecycle::{
+    initialize_forge, register_tool, get_tool_context, shutdown_forge,
+};
+
+// Version Governance & Package Identity (6 functions)
+pub use api::version::{
+    declare_tool_version, enforce_exact_version, require_forge_minimum,
+    current_forge_version, query_active_package_variant, activate_package_variant,
+};
+
+// Pipeline Execution & Orchestration (7 functions)
+pub use api::pipeline::{
+    execute_pipeline, execute_tool_immediately, get_resolved_execution_order,
+    temporarily_override_pipeline_order, restart_current_pipeline,
+    suspend_pipeline_execution, resume_pipeline_execution,
+};
+
+// Triple-Path Reactivity Engine (5 functions)
+pub use api::reactivity::{
+    trigger_realtime_event, trigger_debounced_event, trigger_idle_event,
+    begin_batch_operation, end_batch_operation,
+};
+
+// Safe File Application & Branching Decision Engine (15 functions)
+pub use api::branching::{
+    apply_changes, apply_changes_with_preapproved_votes, apply_changes_force_unchecked,
+    preview_proposed_changes, automatically_accept_green_conflicts,
+    prompt_review_for_yellow_conflicts, automatically_reject_red_conflicts,
+    revert_most_recent_application, submit_branching_vote,
+    register_permanent_branching_voter, query_predicted_branch_color,
+    is_change_guaranteed_safe, issue_immediate_veto, reset_branching_engine_state,
+    BranchColor, BranchingVote,
+};
+// Note: FileChange is already exported from watcher module
+
+// Global Event Bus & Observability (9 functions)
+pub use api::events::{
+    publish_event, subscribe_to_event_stream, emit_tool_started_event,
+    emit_tool_completed_event, emit_pipeline_started_event, emit_pipeline_completed_event,
+    emit_package_installation_begin, emit_package_installation_success,
+    emit_security_violation_detected, emit_magical_config_injection, ForgeEvent,
+};
+
+// The One True Configuration System (16 functions)
+pub use api::config::{
+    get_active_config_file_path, reload_configuration_manifest,
+    enable_live_config_watching, inject_full_config_section_at_cursor,
+    expand_config_placeholder, jump_to_config_section, validate_config_in_realtime,
+    provide_config_completion_suggestions, auto_format_config_file,
+    perform_config_schema_migration, inject_style_tooling_config,
+    inject_authentication_config, inject_ui_framework_config,
+    inject_icon_system_config, inject_font_system_config,
+    inject_media_pipeline_config, inject_package_specific_config,
+};
+
+// CI/CD & Workspace Orchestration (8 functions)
+pub use api::cicd::{
+    trigger_ci_cd_pipeline, register_ci_stage, query_current_ci_status,
+    abort_running_ci_job, synchronize_monorepo_workspace, detect_workspace_root,
+    list_all_workspace_members, broadcast_change_to_workspace,
+};
+
+// .dx/ Directory Management (10 functions)
+pub use api::dx_directory::{
+    get_dx_directory_path, get_dx_binary_storage_path, cache_tool_offline_binary,
+    load_tool_offline_binary, commit_current_dx_state, checkout_dx_state,
+    list_dx_history, show_dx_state_diff, push_dx_state_to_remote,
+    pull_dx_state_from_remote,
+};
+
+// Offline-First Architecture (5 functions)
+pub use api::offline::{
+    detect_offline_mode, force_offline_operation, download_missing_tool_binaries,
+    verify_binary_integrity_and_signature, update_tool_binary_atomically,
+};
+
+// Cart System (8 functions)
+pub use api::cart::{
+    stage_item_in_cart, commit_entire_cart, commit_cart_immediately,
+    clear_cart_completely, remove_specific_cart_item, get_current_cart_contents,
+    export_cart_as_shareable_json, import_cart_from_json, CartItem,
+};
+
+// Package Management (8 functions)
+pub use api::packages::{
+    install_package_with_variant, uninstall_package_safely, update_package_intelligently,
+    list_all_installed_packages, search_dx_package_registry, pin_package_to_exact_version,
+    fork_existing_variant, publish_your_variant, PackageInfo,
+};
+
+// Generated Code Governance (5 functions)
+pub use api::codegen::{
+    mark_code_region_as_dx_generated, is_region_dx_generated,
+    allow_safe_manual_edit_of_generated_code, claim_full_ownership_of_file,
+    release_ownership_of_file,
+};
+
+// Developer Experience & Editor Integration (26 functions)
+pub use api::dx_experience::{
+    project_root_directory, path_to_forge_manifest, dx_global_cache_directory,
+    create_watcher_ignored_scratch_file, log_structured_tool_action,
+    schedule_task_for_idle_time, await_editor_idle_state, request_user_attention_flash,
+    open_file_and_reveal_location, display_inline_code_suggestion,
+    apply_user_accepted_suggestion, show_onboarding_welcome_tour,
+    execute_full_security_audit, generate_comprehensive_project_report,
+    display_dx_command_palette, open_embedded_dx_terminal,
+    trigger_ai_powered_suggestion, apply_ai_generated_completion,
+    open_dx_explorer_sidebar, update_dx_status_bar_indicator,
+};
 
 // Testing forge logging
 // test logging
