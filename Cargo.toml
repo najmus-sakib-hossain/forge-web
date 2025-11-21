@@ -11,19 +11,6 @@ documentation = "https://docs.rs/dx-forge"
 readme = "README.md"
 keywords = ["vcs", "orchestration", "lsp", "developer-tools", "dx"]
 categories = ["development-tools", "filesystem", "command-line-utilities"]
-exclude = [
-    "target/",
-    ".git/",
-    "logs/",
-    "*.log",
-    "vscode-forge/",
-    "scripts/",
-    "task.md.resolved",
-    ".env",
-    ".env.example",
-    "docs/test-*.txt",
-    "docs/todo.md",
-]
 include = [
     "src/**",
     "examples/**",
