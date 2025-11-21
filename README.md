@@ -1,4 +1,4 @@
-# DX Forge v0.1.0
+# DX Forge v0.1.3
 
 [![Crates.io](https://img.shields.io/crates/v/dx-forge.svg)](https://crates.io/crates/dx-forge)
 [![Documentation](https://docs.rs/dx-forge/badge.svg)](https://docs.rs/dx-forge)
