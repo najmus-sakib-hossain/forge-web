@@ -35,6 +35,46 @@ name = "forge-lsp"
 path = "src/bin/lsp.rs"
 required-features = []
 
+[[example]]
+name = "complete_dx_workflow"
+path = "examples/complete_dx_workflow.rs"
+
+[[example]]
+name = "example_tools"
+path = "examples/example_tools.rs"
+
+[[example]]
+name = "full_workflow"
+path = "examples/full_workflow.rs"
+
+[[example]]
+name = "orchestration"
+path = "examples/orchestration.rs"
+
+[[example]]
+name = "quick_test"
+path = "examples/quick_test.rs"
+
+[[example]]
+name = "r2_demo"
+path = "examples/r2_demo.rs"
+
+[[example]]
+name = "simple"
+path = "examples/simple.rs"
+
+[[example]]
+name = "test_all_features"
+path = "examples/test_all_features.rs"
+
+[[example]]
+name = "traffic_branch_and_lsp"
+path = "examples/traffic_branch_and_lsp.rs"
+
+[[example]]
+name = "web_ui"
+path = "examples/web_ui.rs"
+
 [dependencies]
 # Core async runtime
 tokio = { version = "1.48.0", features = ["full"] }
