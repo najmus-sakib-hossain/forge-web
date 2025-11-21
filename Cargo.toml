@@ -2,7 +2,7 @@
 name = "dx-forge"
 version = "0.1.1"
 edition = "2024"
-rust-version = "1.70"
+rust-version = "1.85.0"
 authors = ["Najmus Sakib Hossain <najmus.sakib.hossain@gmail.com>"]
 description = "Production-ready VCS and orchestration engine for DX tools with Git-like versioning, dual-watcher architecture, traffic branch system, and component injection"
 license = "MIT OR Apache-2.0"
