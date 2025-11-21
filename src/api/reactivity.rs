@@ -1,13 +1,13 @@
 //! Triple-Path Reactivity Engine APIs
 
 use anyhow::Result;
-use std::sync::Arc;
+use std::sync::{Arc, OnceLock};
 use parking_lot::RwLock;
 use tokio::time::{Duration, sleep};
 use std::path::PathBuf;
 
 /// Reactivity state management
-static mut REACTIVITY_STATE: Option<Arc<RwLock<ReactivityState>>> = None;
+static REACTIVITY_STATE: OnceLock<Arc<RwLock<ReactivityState>>> = OnceLock::new();
 
 struct ReactivityState {
     in_batch: bool,
@@ -24,12 +24,7 @@ impl Default for ReactivityState {
 }
 
 fn get_reactivity_state() -> Arc<RwLock<ReactivityState>> {
-    unsafe {
-        if REACTIVITY_STATE.is_none() {
-            REACTIVITY_STATE = Some(Arc::new(RwLock::new(ReactivityState::default())));
-        }
-        REACTIVITY_STATE.as_ref().unwrap().clone()
-    }
+    REACTIVITY_STATE.get_or_init(|| Arc::new(RwLock::new(ReactivityState::default()))).clone()
 }
 
 /// Instant path — called on every DidChangeTextDocument

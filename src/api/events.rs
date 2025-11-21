@@ -3,7 +3,7 @@
 use anyhow::Result;
 use serde::{Serialize, Deserialize};
 use tokio::sync::broadcast;
-use std::sync::Arc;
+use std::sync::{Arc, OnceLock};
 use parking_lot::RwLock;
 
 /// Forge event types
@@ -20,7 +20,7 @@ pub enum ForgeEvent {
     Custom { event_type: String, data: serde_json::Value, timestamp: i64 },
 }
 
-static mut EVENT_BUS: Option<Arc<RwLock<EventBus>>> = None;
+static EVENT_BUS: OnceLock<Arc<RwLock<EventBus>>> = OnceLock::new();
 
 struct EventBus {
     sender: broadcast::Sender<ForgeEvent>,
@@ -34,12 +34,7 @@ impl EventBus {
 }
 
 fn get_event_bus() -> Arc<RwLock<EventBus>> {
-    unsafe {
-        if EVENT_BUS.is_none() {
-            EVENT_BUS = Some(Arc::new(RwLock::new(EventBus::new())));
-        }
-        EVENT_BUS.as_ref().unwrap().clone()
-    }
+    EVENT_BUS.get_or_init(|| Arc::new(RwLock::new(EventBus::new()))).clone()
 }
 
 pub fn publish_event(event: ForgeEvent) -> Result<()> {

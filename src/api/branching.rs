@@ -2,7 +2,7 @@
 
 use anyhow::Result;
 use std::path::PathBuf;
-use std::sync::Arc;
+use std::sync::{Arc, OnceLock};
 use parking_lot::RwLock;
 use std::collections::HashMap;
 
@@ -34,7 +34,7 @@ pub struct BranchingVote {
 }
 
 /// Branching engine state
-static mut BRANCHING_STATE: Option<Arc<RwLock<BranchingState>>> = None;
+static BRANCHING_STATE: OnceLock<Arc<RwLock<BranchingState>>> = OnceLock::new();
 
 struct BranchingState {
     voters: Vec<String>,
@@ -55,12 +55,7 @@ impl Default for BranchingState {
 }
 
 fn get_branching_state() -> Arc<RwLock<BranchingState>> {
-    unsafe {
-        if BRANCHING_STATE.is_none() {
-            BRANCHING_STATE = Some(Arc::new(RwLock::new(BranchingState::default())));
-        }
-        BRANCHING_STATE.as_ref().unwrap().clone()
-    }
+    BRANCHING_STATE.get_or_init(|| Arc::new(RwLock::new(BranchingState::default()))).clone()
 }
 
 /// Primary API — full branching resolution + telemetry

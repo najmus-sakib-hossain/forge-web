@@ -2,10 +2,10 @@
 
 use anyhow::Result;
 use parking_lot::RwLock;
-use std::sync::Arc;
+use std::sync::{Arc, OnceLock};
 
 /// Pipeline execution state
-static mut PIPELINE_STATE: Option<Arc<RwLock<PipelineState>>> = None;
+static PIPELINE_STATE: OnceLock<Arc<RwLock<PipelineState>>> = OnceLock::new();
 
 struct PipelineState {
     active_pipeline: Option<String>,
@@ -26,12 +26,7 @@ impl Default for PipelineState {
 }
 
 fn get_pipeline_state() -> Arc<RwLock<PipelineState>> {
-    unsafe {
-        if PIPELINE_STATE.is_none() {
-            PIPELINE_STATE = Some(Arc::new(RwLock::new(PipelineState::default())));
-        }
-        PIPELINE_STATE.as_ref().unwrap().clone()
-    }
+    PIPELINE_STATE.get_or_init(|| Arc::new(RwLock::new(PipelineState::default()))).clone()
 }
 
 /// Executes named pipeline ("default" | "auth" | "deploy" | "ci")

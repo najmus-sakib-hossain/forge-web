@@ -108,7 +108,7 @@ pub fn register_tool(tool: Box<dyn DxTool>) -> Result<String> {
     tracing::info!("📦 Registering tool: {}", tool_id);
     
     unsafe {
-        if let Some(registry) = &TOOL_REGISTRY {
+        if let Some(registry) = (*std::ptr::addr_of!(TOOL_REGISTRY)).as_ref() {
             let tool_arc = Arc::new(RwLock::new(tool));
             registry.write().insert(tool_id.clone(), tool_arc);
         }
@@ -139,7 +139,7 @@ pub fn get_tool_context() -> Result<ExecutionContext> {
     ensure_initialized()?;
     
     unsafe {
-        if let Some(context) = &CURRENT_CONTEXT {
+        if let Some(context) = (*std::ptr::addr_of!(CURRENT_CONTEXT)).as_ref() {
             Ok(context.read().clone())
         } else {
             anyhow::bail!("Tool context not available")
@@ -168,14 +168,14 @@ pub fn shutdown_forge() -> Result<()> {
     
     unsafe {
         // Clear tool registry
-        if let Some(registry) = TOOL_REGISTRY.take() {
+        if let Some(registry) = (*std::ptr::addr_of_mut!(TOOL_REGISTRY)).take() {
             let count = registry.read().len();
             tracing::info!("📦 Unregistering {} tools", count);
             drop(registry);
         }
         
         // Drop forge instance (triggers Drop impl cleanup)
-        if let Some(forge) = FORGE_INSTANCE.take() {
+        if let Some(forge) = (*std::ptr::addr_of_mut!(FORGE_INSTANCE)).take() {
             tracing::info!("🧹 Cleaning up forge instance");
             drop(forge);
         }
@@ -192,7 +192,7 @@ pub fn shutdown_forge() -> Result<()> {
 
 fn ensure_initialized() -> Result<()> {
     unsafe {
-        if FORGE_INSTANCE.is_none() {
+        if (*std::ptr::addr_of!(FORGE_INSTANCE)).is_none() {
             anyhow::bail!("Forge not initialized. Call initialize_forge() first.");
         }
     }

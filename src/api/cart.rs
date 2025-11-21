@@ -4,7 +4,7 @@ use anyhow::Result;
 use serde::{Serialize, Deserialize};
 use std::path::PathBuf;
 use parking_lot::RwLock;
-use std::sync::Arc;
+use std::sync::{Arc, OnceLock};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CartItem {
@@ -15,15 +15,10 @@ pub struct CartItem {
     pub config: serde_json::Value,
 }
 
-static mut CART: Option<Arc<RwLock<Vec<CartItem>>>> = None;
+static CART: OnceLock<Arc<RwLock<Vec<CartItem>>>> = OnceLock::new();
 
 fn get_cart() -> Arc<RwLock<Vec<CartItem>>> {
-    unsafe {
-        if CART.is_none() {
-            CART = Some(Arc::new(RwLock::new(Vec::new())));
-        }
-        CART.as_ref().unwrap().clone()
-    }
+    CART.get_or_init(|| Arc::new(RwLock::new(Vec::new()))).clone()
 }
 
 pub fn stage_item_in_cart(item: CartItem) -> Result<()> {

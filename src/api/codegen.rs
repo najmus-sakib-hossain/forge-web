@@ -4,7 +4,7 @@ use anyhow::Result;
 use std::path::{Path, PathBuf};
 use std::collections::HashMap;
 use parking_lot::RwLock;
-use std::sync::Arc;
+use std::sync::{Arc, OnceLock};
 
 #[derive(Debug, Clone)]
 pub struct GeneratedRegion {
@@ -14,25 +14,15 @@ pub struct GeneratedRegion {
     pub allow_manual_edit: bool,
 }
 
-static mut CODE_REGIONS: Option<Arc<RwLock<HashMap<PathBuf, Vec<GeneratedRegion>>>>> = None;
-static mut FILE_OWNERSHIP: Option<Arc<RwLock<HashMap<PathBuf, String>>>> = None;
+static CODE_REGIONS: OnceLock<Arc<RwLock<HashMap<PathBuf, Vec<GeneratedRegion>>>>> = OnceLock::new();
+static FILE_OWNERSHIP: OnceLock<Arc<RwLock<HashMap<PathBuf, String>>>> = OnceLock::new();
 
 fn get_regions() -> Arc<RwLock<HashMap<PathBuf, Vec<GeneratedRegion>>>> {
-    unsafe {
-        if CODE_REGIONS.is_none() {
-            CODE_REGIONS = Some(Arc::new(RwLock::new(HashMap::new())));
-        }
-        CODE_REGIONS.as_ref().unwrap().clone()
-    }
+    CODE_REGIONS.get_or_init(|| Arc::new(RwLock::new(HashMap::new()))).clone()
 }
 
 fn get_ownership() -> Arc<RwLock<HashMap<PathBuf, String>>> {
-    unsafe {
-        if FILE_OWNERSHIP.is_none() {
-            FILE_OWNERSHIP = Some(Arc::new(RwLock::new(HashMap::new())));
-        }
-        FILE_OWNERSHIP.as_ref().unwrap().clone()
-    }
+    FILE_OWNERSHIP.get_or_init(|| Arc::new(RwLock::new(HashMap::new()))).clone()
 }
 
 pub fn mark_code_region_as_dx_generated(
