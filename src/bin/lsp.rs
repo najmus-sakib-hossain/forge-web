@@ -49,7 +49,7 @@ async fn main() -> Result<()> {
     info!("🔧 Features: DX component detection, completion, hover");
 
     // Create LSP server
-    let server = dx_forge::server::lsp::LspServer::new()?;
+    let _server = dx_forge::server::lsp::LspServer::new()?;
 
     info!("✅ LSP Server initialized");
     info!("📝 Reading from stdin, writing to stdout");

@@ -142,7 +142,10 @@ pub use storage::{Database, OperationLog};
 // Re-export DX tools support types
 // ========================================================================
 
-pub use version::{ToolInfo, ToolRegistry, ToolSource, Version, VersionReq};
+pub use version::{
+    ToolInfo, ToolRegistry, ToolSource, Version, VersionReq,
+    Snapshot, SnapshotId, SnapshotManager, Branch, ToolState, FileSnapshot, SnapshotDiff,
+};
 pub use patterns::{DxToolType, PatternDetector, PatternMatch};
 pub use injection::{CacheStats, ComponentMetadata, InjectionManager};
 pub use error::{categorize_error, EnhancedError, EnhancedResult, ErrorCategory, RetryPolicy, ToEnhanced, with_retry};

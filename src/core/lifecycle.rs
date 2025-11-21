@@ -271,13 +271,11 @@ impl Default for LifecycleManager {
 mod tests {
     use super::*;
     use crate::orchestrator::{ExecutionContext, ToolOutput};
-    use async_trait::async_trait;
     
     struct TestTool {
         name: String,
     }
     
-    #[async_trait]
     impl DxTool for TestTool {
         fn name(&self) -> &str {
             &self.name
@@ -287,11 +285,11 @@ mod tests {
             "1.0.0"
         }
         
-        fn priority(&self) -> i32 {
+        fn priority(&self) -> u32 {
             50
         }
         
-        async fn execute(&self, _ctx: &ExecutionContext) -> Result<ToolOutput> {
+        fn execute(&mut self, _ctx: &ExecutionContext) -> Result<ToolOutput> {
             Ok(ToolOutput::success())
         }
     }
