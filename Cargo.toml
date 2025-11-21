@@ -1,18 +1,29 @@
 [package]
 name = "dx-forge"
-version = "0.0.2"
+version = "0.1.0"
 edition = "2021"
 rust-version = "1.70"
-authors = ["DX Team <team@dx.tools>"]
-description = "Production-ready VCS and orchestration engine for DX tools ecosystem with LSP integration, traffic branch system, and zero node_modules architecture"
+authors = ["Najmus Sakib Hossain <najmus.sakib.hossain@gmail.com>"]
+description = "Production-ready VCS and orchestration engine for DX tools with Git-like versioning, dual-watcher architecture, traffic branch system, and component injection"
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/najmus-sakib-hossain/forge"
 documentation = "https://docs.rs/dx-forge"
-homepage = "https://dx.tools/forge"
 readme = "README.md"
-keywords = ["vcs", "orchestration", "lsp", "dx", "tools"]
+keywords = ["vcs", "orchestration", "lsp", "developer-tools", "dx"]
 categories = ["development-tools", "filesystem", "command-line-utilities"]
-exclude = ["examples/", "target/", ".git/"]
+exclude = [
+    "target/",
+    ".git/",
+    "logs/",
+    "*.log",
+    "vscode-forge/",
+    "scripts/",
+    "task.md.resolved",
+    ".env",
+    ".env.example",
+    "docs/test-*.txt",
+    "docs/todo.md",
+]
 
 [[bin]]
 name = "forge-cli"
