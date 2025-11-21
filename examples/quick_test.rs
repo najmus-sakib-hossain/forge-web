@@ -46,7 +46,7 @@ async fn main() -> Result<()> {
 
     // Test 4: File Watcher Events
     println!("\n4️⃣  Testing Event Types...");
-    use dx_forge::watcher::ForgeEvent;
+    use dx_forge::watcher_legacy::ForgeEvent;
     let rapid = ForgeEvent::Rapid {
         path: "test.rs".to_string(),
         time_us: 25,

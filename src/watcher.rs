@@ -264,7 +264,14 @@ impl FileWatcher {
 pub struct DualWatcher {
     lsp_watcher: Arc<LspWatcher>,
     file_watcher: Arc<RwLock<FileWatcher>>,
+    /// Sender for unified change stream
+    change_tx: broadcast::Sender<FileChange>,
+    /// Receiver for unified change stream
     change_rx: broadcast::Receiver<FileChange>,
+    /// Internal LSP change stream (wired into change_tx when started)
+    lsp_rx: Option<broadcast::Receiver<FileChange>>,
+    /// Internal file-system change stream (wired into change_tx when started)
+    fs_rx: Option<broadcast::Receiver<FileChange>>,
 }
 
 impl DualWatcher {
@@ -273,35 +280,57 @@ impl DualWatcher {
         let (lsp_watcher, lsp_rx) = LspWatcher::new();
         let (file_watcher, fs_rx) = FileWatcher::new()?;
 
-        // Create unified change channel
+        // Create unified change channel. We delay spawning the merge
+        // tasks until `start` is called so this constructor can be
+        // used from non-async contexts (e.g. tests) without requiring
+        // a Tokio runtime.
         let (change_tx, change_rx) = broadcast::channel(1000);
-
-        // Spawn task to merge LSP and FS events
-        let tx1 = change_tx.clone();
-        tokio::spawn(async move {
-            let mut lsp_rx = lsp_rx;
-            while let Ok(change) = lsp_rx.recv().await {
-                let _ = tx1.send(change);
-            }
-        });
-
-        let tx2 = change_tx.clone();
-        tokio::spawn(async move {
-            let mut fs_rx = fs_rx;
-            while let Ok(change) = fs_rx.recv().await {
-                let _ = tx2.send(change);
-            }
-        });
 
         Ok(Self {
             lsp_watcher: Arc::new(lsp_watcher),
             file_watcher: Arc::new(RwLock::new(file_watcher)),
+            change_tx,
             change_rx,
+            lsp_rx: Some(lsp_rx),
+            fs_rx: Some(fs_rx),
         })
+    }
+
+    /// Start background tasks that merge LSP and file-system events
+    /// into the unified change stream. This is safe to call multiple
+    /// times; merge tasks will only be spawned once.
+    fn start_merge_tasks(&mut self) {
+        // If both receivers have already been taken, merge tasks are
+        // already running (or were intentionally disabled).
+        if self.lsp_rx.is_none() && self.fs_rx.is_none() {
+            return;
+        }
+
+        if let Some(mut lsp_rx) = self.lsp_rx.take() {
+            let tx = self.change_tx.clone();
+            tokio::spawn(async move {
+                while let Ok(change) = lsp_rx.recv().await {
+                    let _ = tx.send(change);
+                }
+            });
+        }
+
+        if let Some(mut fs_rx) = self.fs_rx.take() {
+            let tx = self.change_tx.clone();
+            tokio::spawn(async move {
+                while let Ok(change) = fs_rx.recv().await {
+                    let _ = tx.send(change);
+                }
+            });
+        }
     }
 
     /// Start both watchers
     pub async fn start(&mut self, path: impl AsRef<Path>) -> Result<()> {
+        // We are now guaranteed to be running inside a Tokio runtime,
+        // so it's safe to spawn the merge tasks.
+        self.start_merge_tasks();
+
         // Start LSP watcher
         self.lsp_watcher.start().await?;
 

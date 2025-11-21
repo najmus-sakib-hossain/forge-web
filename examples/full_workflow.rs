@@ -141,8 +141,9 @@ fn main() -> Result<()> {
 
     // Step 9: Traffic Branch Analysis
     println!("📦 Step 9: Traffic branch analysis...");
-    use dx_forge::{TrafficAnalyzer, TrafficBranch, DefaultTrafficAnalyzer};
-    
+    use dx_forge::{TrafficAnalyzer, TrafficBranch};
+    use dx_forge::orchestrator::DefaultTrafficAnalyzer;
+
     let analyzer = DefaultTrafficAnalyzer;
     let test_files = vec![
         "src/components/Button.tsx",
@@ -170,7 +171,7 @@ fn main() -> Result<()> {
 
     // Summary
     println!("🎉 Complete DX Tools Workflow Demonstration");
-    println!("=" .repeat(50));
+    println!("{}", "=".repeat(50));
     println!("✅ Forge initialized");
     println!("✅ {} tools registered and executed", outputs.len());
     println!("✅ {} files generated and tracked", all_generated.len());

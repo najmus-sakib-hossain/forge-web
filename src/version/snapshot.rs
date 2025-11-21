@@ -139,8 +139,9 @@ pub struct SnapshotManager {
 impl SnapshotManager {
     /// Create a new snapshot manager
     pub fn new(forge_dir: &Path) -> Result<Self> {
-        let db_path = forge_dir.join("forge.db");  // Changed from snapshots.db
-        let db = Database::new(&db_path)?;
+        // Ensure forge directory exists and open the shared forge database
+        std::fs::create_dir_all(forge_dir)?;
+        let db = Database::new(forge_dir)?;
 
         let snapshots_path = forge_dir.join("snapshots");
         let branches_path = forge_dir.join("branches.json");
@@ -173,6 +174,7 @@ impl SnapshotManager {
     ) -> Result<SnapshotId> {
         let author = whoami::username();
         let timestamp = Utc::now();
+        let message: String = message.into();
 
         // Create file snapshots
         let mut file_snapshots = HashMap::new();
@@ -184,18 +186,29 @@ impl SnapshotManager {
         }
 
         // Get parent snapshot from current branch
-        let parents = self.get_branch_head(&self.current_branch)?
+        let parents = self
+            .get_branch_head(&self.current_branch)?
             .map(|head| vec![head])
             .unwrap_or_default();
 
-        // Compute snapshot ID
-        let content = serde_json::to_vec(&(&tool_states, &file_snapshots))?;
-        let id = SnapshotId::from_hash(&content);
+        // Compute snapshot ID from full commit-like content so that
+        // even identical tool states taken at different times produce
+        // distinct snapshot IDs. This prevents cycles in history
+        // traversal.
+        let id_content = serde_json::to_vec(&(
+            &tool_states,
+            &file_snapshots,
+            &parents,
+            &message,
+            &author,
+            timestamp,
+        ))?;
+        let id = SnapshotId::from_hash(&id_content);
 
         let snapshot = Snapshot {
             id: id.clone(),
             parents,
-            message: message.into(),
+            message,
             author,
             timestamp,
             tool_states,
@@ -334,14 +347,23 @@ impl SnapshotManager {
         // Create merge snapshot with both parents
         let author = whoami::username();
         let timestamp = Utc::now();
+        let message: String = message.into();
 
-        let content = serde_json::to_vec(&(&merged_states, &merged_files))?;
-        let id = SnapshotId::from_hash(&content);
+        let id_content = serde_json::to_vec(&(
+            &merged_states,
+            &merged_files,
+            &source_head,
+            &target_head,
+            &message,
+            &author,
+            timestamp,
+        ))?;
+        let id = SnapshotId::from_hash(&id_content);
 
         let snapshot = Snapshot {
             id: id.clone(),
             parents: vec![target_head, source_head],
-            message: message.into(),
+            message,
             author,
             timestamp,
             tool_states: merged_states,

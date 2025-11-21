@@ -255,9 +255,26 @@ pub trait DxTool: Send + Sync {
     /// # Example
     /// 
     /// ```rust,no_run
-    /// fn should_run(&self, ctx: &ExecutionContext) -> bool {
-    ///     // Only run if TypeScript files changed
-    ///     ctx.changed_files.iter().any(|f| f.extension().map_or(false, |e| e == "ts"))
+    /// use dx_forge::{DxTool, ExecutionContext, ToolOutput};
+    /// use anyhow::Result;
+    ///
+    /// struct MyTool;
+    ///
+    /// impl DxTool for MyTool {
+    ///     fn name(&self) -> &str { "dx-mytool" }
+    ///     fn version(&self) -> &str { "1.0.0" }
+    ///     fn priority(&self) -> u32 { 10 }
+    ///
+    ///     fn execute(&mut self, _ctx: &ExecutionContext) -> Result<ToolOutput> {
+    ///         Ok(ToolOutput::success())
+    ///     }
+    ///
+    ///     fn should_run(&self, ctx: &ExecutionContext) -> bool {
+    ///         // Only run if TypeScript files changed
+    ///         ctx.changed_files
+    ///             .iter()
+    ///             .any(|path| path.extension().map_or(false, |ext| ext == "ts"))
+    ///     }
     /// }
     /// ```
     fn should_run(&self, _context: &ExecutionContext) -> bool {
@@ -276,8 +293,26 @@ pub trait DxTool: Send + Sync {
     /// # Example
     /// 
     /// ```rust,no_run
-    /// fn dependencies(&self) -> Vec<String> {
-    ///     vec!["dx-codegen".to_string(), "dx-schema".to_string()]
+    /// use dx_forge::{DxTool, ExecutionContext, ToolOutput};
+    /// use anyhow::Result;
+    ///
+    /// struct SchemaAwareTool;
+    ///
+    /// impl DxTool for SchemaAwareTool {
+    ///     fn name(&self) -> &str { "dx-schema-consumer" }
+    ///     fn version(&self) -> &str { "1.0.0" }
+    ///     fn priority(&self) -> u32 { 20 }
+    ///
+    ///     fn execute(&mut self, _ctx: &ExecutionContext) -> Result<ToolOutput> {
+    ///         Ok(ToolOutput::success())
+    ///     }
+    ///
+    ///     fn dependencies(&self) -> Vec<String> {
+    ///         vec![
+    ///             "dx-codegen".to_string(),
+    ///             "dx-schema".to_string(),
+    ///         ]
+    ///     }
     /// }
     /// ```
     fn dependencies(&self) -> Vec<String> {
@@ -357,25 +392,25 @@ pub trait DxTool: Send + Sync {
 /// This system prevents breaking changes from being automatically merged while
 /// allowing safe updates to proceed without manual intervention.
 /// 
-/// # Example
-/// 
-/// ```rust,no_run
-/// use dx_forge::{TrafficBranch, TrafficAnalyzer, DefaultTrafficAnalyzer};
-/// use std::path::Path;
-/// 
-/// let analyzer = DefaultTrafficAnalyzer;
-/// let result = analyzer.analyze(Path::new("src/api/types.ts")).unwrap();
-/// 
-/// match result {
-///     TrafficBranch::Green => println!("Safe to auto-merge"),
-///     TrafficBranch::Yellow { conflicts } => {
-///         println!("Review {} potential conflicts", conflicts.len())
-///     }
-///     TrafficBranch::Red { conflicts } => {
-///         println!("Manual resolution required for {} conflicts", conflicts.len())
-///     }
-/// }
-/// ```
+    /// # Example
+    /// 
+    /// ```rust,no_run
+    /// use dx_forge::orchestrator::{TrafficBranch, TrafficAnalyzer, DefaultTrafficAnalyzer};
+    /// use std::path::Path;
+    /// 
+    /// let analyzer = DefaultTrafficAnalyzer;
+    /// let result = analyzer.analyze(Path::new("src/api/types.ts")).unwrap();
+    /// 
+    /// match result {
+    ///     TrafficBranch::Green => println!("Safe to auto-merge"),
+    ///     TrafficBranch::Yellow { conflicts } => {
+    ///         println!("Review {} potential conflicts", conflicts.len())
+    ///     }
+    ///     TrafficBranch::Red { conflicts } => {
+    ///         println!("Manual resolution required for {} conflicts", conflicts.len())
+    ///     }
+    /// }
+    /// ```
 #[derive(Debug, Clone, PartialEq)]
 pub enum TrafficBranch {
     /// 🟢 Green: Safe to auto-update

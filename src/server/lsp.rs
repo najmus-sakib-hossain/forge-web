@@ -195,7 +195,17 @@ async fn test_lsp_server_creation() {
     #[tokio::test]
     async fn test_completion() {
         let server = LspServer::new().unwrap();
-        let completions = server.completion("test.tsx".to_string(), 0, 2).await.unwrap();
+        // Simulate a client opening a document and requesting completions
+        let content = "dx";
+        server
+            .did_open("test.tsx".to_string(), content.to_string())
+            .await
+            .unwrap();
+
+        let completions = server
+            .completion("test.tsx".to_string(), 0, 2)
+            .await
+            .unwrap();
         
         // Should provide DX completions
         assert!(!completions.is_empty());

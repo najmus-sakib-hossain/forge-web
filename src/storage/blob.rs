@@ -21,6 +21,9 @@ pub struct BlobMetadata {
     /// Blob size in bytes
     pub size: u64,
 
+    /// Original (uncompressed) size in bytes, if compressed
+    pub original_size: Option<u64>,
+
     /// MIME type
     pub mime_type: String,
 
@@ -51,6 +54,7 @@ impl Blob {
             hash: hash.clone(),
             path: path.display().to_string(),
             size,
+            original_size: None,
             mime_type,
             created_at: chrono::Utc::now(),
             compression: None,
@@ -69,6 +73,7 @@ impl Blob {
             hash: hash.clone(),
             path: path.to_string(),
             size,
+            original_size: None,
             mime_type,
             created_at: chrono::Utc::now(),
             compression: None,
@@ -124,6 +129,8 @@ impl Blob {
 
         // Only use compression if it actually reduces size
         if compressed.len() < self.content.len() {
+            // Remember original size so we can safely decompress later
+            self.metadata.original_size = Some(self.metadata.size);
             self.content = compressed;
             self.metadata.compression = Some("lz4".to_string());
             self.metadata.size = self.content.len() as u64;
@@ -138,9 +145,17 @@ impl Blob {
             return Ok(()); // Not compressed
         }
 
-        let decompressed = lz4::block::decompress(&self.content, None)?;
+        // Use the recorded original size when available to avoid
+        // decompression errors due to missing size hints.
+        let original_size = self
+            .metadata
+            .original_size
+            .unwrap_or(self.metadata.size) as i32;
+
+        let decompressed = lz4::block::decompress(&self.content, Some(original_size))?;
         self.content = decompressed;
         self.metadata.compression = None;
+        self.metadata.original_size = None;
         self.metadata.size = self.content.len() as u64;
 
         Ok(())

@@ -31,28 +31,25 @@
 //!
 //! ```rust,no_run
 //! use dx_forge::{DxTool, ExecutionContext, ToolOutput, Orchestrator};
-//! use async_trait::async_trait;
 //! use anyhow::Result;
 //!
 //! struct MyDxTool;
 //!
-//! #[async_trait]
 //! impl DxTool for MyDxTool {
 //!     fn name(&self) -> &str { "dx-mytool" }
 //!     fn version(&self) -> &str { "1.0.0" }
-//!     fn priority(&self) -> i32 { 50 }
+//!     fn priority(&self) -> u32 { 50 }
 //!     
-//!     async fn execute(&self, ctx: &ExecutionContext) -> Result<ToolOutput> {
+//!     fn execute(&mut self, _ctx: &ExecutionContext) -> Result<ToolOutput> {
 //!         // Your tool logic here
-//!         Ok(ToolOutput::success("Done!"))
+//!         Ok(ToolOutput::success())
 //!     }
 //! }
 //!
-//! #[tokio::main]
-//! async fn main() -> Result<()> {
+//! fn main() -> Result<()> {
 //!     let mut orchestrator = Orchestrator::new(".")?;
-//!     orchestrator.register_tool(Box::new(MyDxTool));
-//!     orchestrator.execute_all().await?;
+//!     orchestrator.register_tool(Box::new(MyDxTool))?;
+//!     let _outputs = orchestrator.execute_all()?;
 //!     Ok(())
 //! }
 //! ```
@@ -61,20 +58,24 @@
 //!
 //! ```rust,no_run
 //! use dx_forge::{DualWatcher, FileChange};
-//! use tokio::sync::broadcast;
+//! use anyhow::Result;
+//! use std::path::PathBuf;
 //!
 //! #[tokio::main]
-//! async fn main() -> anyhow::Result<()> {
-//!     let watcher = DualWatcher::new(".")?;
-//!     let mut rx = watcher.subscribe();
-//!     
-//!     tokio::spawn(async move {
-//!         watcher.start().await
-//!     });
-//!     
+//! async fn main() -> Result<()> {
+//!     let mut watcher = DualWatcher::new()?;
+//!     let project_root = PathBuf::from(".");
+//! 
+//!     // Start watching for changes
+//!     watcher.start(&project_root).await?;
+//! 
+//!     // Subscribe to the unified change stream
+//!     let mut rx = watcher.receiver();
+//! 
 //!     while let Ok(change) = rx.recv().await {
-//!         println!("Change detected: {:?} ({})", change.path, change.source);
+//!         println!("Change detected: {:?} ({:?})", change.path, change.source);
 //!     }
+//! 
 //!     Ok(())
 //! }
 //! ```

@@ -78,8 +78,12 @@ pub struct GeneratedCodeTracker {
 impl GeneratedCodeTracker {
     /// Create a new code tracker
     pub fn new(forge_dir: &Path) -> Result<Self> {
-        let db_path = forge_dir.join("forge.db");
-        let db = Database::new(&db_path)
+        // Ensure forge directory exists
+        std::fs::create_dir_all(forge_dir)
+            .context("Failed to create forge directory for tracking database")?;
+
+        // Use the shared forge database located at forge_dir/forge.db
+        let db = Database::new(forge_dir)
             .context("Failed to open tracking database")?;
         
         let index_path = forge_dir.join("generated_files.json");

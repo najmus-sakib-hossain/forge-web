@@ -7,19 +7,17 @@
 //! Run with: cargo run --example orchestration
 
 use anyhow::{Context, Result};
-use async_trait::async_trait;
 use dx_forge::{
-    DualWatcher, DxTool, ExecutionContext, FileChange, Orchestrator, ToolOutput, TrafficAnalyzer,
-    TrafficBranch,
+    DualWatcher, DxTool, ExecutionContext, FileChange, Orchestrator, ToolOutput,
 };
-use std::collections::HashMap;
-use std::path::{Path, PathBuf};
-use tokio::time::{sleep, Duration};
+use dx_forge::{TrafficAnalyzer, TrafficBranch};
+use std::path::Path;
+use std::thread;
+use std::time::Duration;
 
 /// Example DX-Style tool: manages CSS/styling
 struct DxStyleTool;
 
-#[async_trait]
 impl DxTool for DxStyleTool {
     fn name(&self) -> &str {
         "dx-style"
@@ -29,7 +27,7 @@ impl DxTool for DxStyleTool {
         "1.0.0"
     }
 
-    fn priority(&self) -> i32 {
+    fn priority(&self) -> u32 {
         100 // High priority - styles needed first
     }
 
@@ -46,30 +44,23 @@ impl DxTool for DxStyleTool {
         })
     }
 
-    async fn execute(&self, ctx: &ExecutionContext) -> Result<ToolOutput> {
+    fn execute(&mut self, ctx: &ExecutionContext) -> Result<ToolOutput> {
         println!("🎨 [dx-style] Processing styles...");
-        sleep(Duration::from_millis(50)).await; // Simulate work
+        thread::sleep(Duration::from_millis(50)); // Simulate work
 
-        let mut messages = Vec::new();
         for file in &ctx.changed_files {
-            messages.push(format!("Processed: {}", file.display()));
+            println!("Processed: {}", file.display());
         }
 
-        Ok(ToolOutput {
-            success: true,
-            message: "Styles processed successfully".to_string(),
-            artifacts: HashMap::from([("css_bundle".to_string(), "styles.min.css".to_string())]),
-            warnings: vec![],
-            errors: vec![],
-            execution_time: Duration::from_millis(50),
-        })
+        let mut output = ToolOutput::success();
+        output.message = "Styles processed successfully".to_string();
+        Ok(output)
     }
 }
 
 /// Example DX-UI tool: manages UI components
 struct DxUiTool;
 
-#[async_trait]
 impl DxTool for DxUiTool {
     fn name(&self) -> &str {
         "dx-ui"
@@ -79,7 +70,7 @@ impl DxTool for DxUiTool {
         "2.1.0"
     }
 
-    fn priority(&self) -> i32 {
+    fn priority(&self) -> u32 {
         80 // Medium-high priority
     }
 
@@ -96,31 +87,23 @@ impl DxTool for DxUiTool {
         })
     }
 
-    async fn execute(&self, ctx: &ExecutionContext) -> Result<ToolOutput> {
+    fn execute(&mut self, ctx: &ExecutionContext) -> Result<ToolOutput> {
         println!("🧩 [dx-ui] Injecting UI components...");
-        sleep(Duration::from_millis(100)).await; // Simulate work
+        thread::sleep(Duration::from_millis(100)); // Simulate work
 
-        let mut artifacts = HashMap::new();
-        artifacts.insert(
-            "components_injected".to_string(),
-            "dxButton, dxInput".to_string(),
-        );
+        for file in &ctx.changed_files {
+            println!("   Analyzing component file: {}", file.display());
+        }
 
-        Ok(ToolOutput {
-            success: true,
-            message: "UI components injected successfully".to_string(),
-            artifacts,
-            warnings: vec!["Some components not optimized".to_string()],
-            errors: vec![],
-            execution_time: Duration::from_millis(100),
-        })
+        let mut output = ToolOutput::success();
+        output.message = "UI components injected successfully".to_string();
+        Ok(output)
     }
 }
 
 /// Example DX-Icons tool: manages icon assets
 struct DxIconsTool;
 
-#[async_trait]
 impl DxTool for DxIconsTool {
     fn name(&self) -> &str {
         "dx-icons"
@@ -130,7 +113,7 @@ impl DxTool for DxIconsTool {
         "1.5.0"
     }
 
-    fn priority(&self) -> i32 {
+    fn priority(&self) -> u32 {
         60 // Medium priority
     }
 
@@ -147,25 +130,23 @@ impl DxTool for DxIconsTool {
         })
     }
 
-    async fn execute(&self, ctx: &ExecutionContext) -> Result<ToolOutput> {
+    fn execute(&mut self, ctx: &ExecutionContext) -> Result<ToolOutput> {
         println!("🎭 [dx-icons] Processing icon references...");
-        sleep(Duration::from_millis(30)).await; // Simulate work
+        thread::sleep(Duration::from_millis(30)); // Simulate work
 
-        Ok(ToolOutput {
-            success: true,
-            message: "Icons injected: dxiArrowRight, dxiCheck".to_string(),
-            artifacts: HashMap::from([("icons_count".to_string(), "2".to_string())]),
-            warnings: vec![],
-            errors: vec![],
-            execution_time: Duration::from_millis(30),
-        })
+        for file in &ctx.changed_files {
+            println!("   Scanning for dxi* patterns in {}", file.display());
+        }
+
+        let mut output = ToolOutput::success();
+        output.message = "Icons injected: dxiArrowRight, dxiCheck".to_string();
+        Ok(output)
     }
 }
 
 /// Example DX-Check tool: runs validation and linting
 struct DxCheckTool;
 
-#[async_trait]
 impl DxTool for DxCheckTool {
     fn name(&self) -> &str {
         "dx-check"
@@ -175,7 +156,7 @@ impl DxTool for DxCheckTool {
         "3.0.0"
     }
 
-    fn priority(&self) -> i32 {
+    fn priority(&self) -> u32 {
         10 // Low priority - runs last
     }
 
@@ -191,53 +172,16 @@ impl DxTool for DxCheckTool {
         true // Always run validation
     }
 
-    async fn execute(&self, ctx: &ExecutionContext) -> Result<ToolOutput> {
+    fn execute(&mut self, ctx: &ExecutionContext) -> Result<ToolOutput> {
         println!("✅ [dx-check] Running validation...");
-        sleep(Duration::from_millis(80)).await; // Simulate work
+        thread::sleep(Duration::from_millis(80)); // Simulate work
 
         let file_count = ctx.changed_files.len();
-        Ok(ToolOutput {
-            success: true,
-            message: format!("Validated {} files - all checks passed", file_count),
-            artifacts: HashMap::from([
-                ("checks_passed".to_string(), "23".to_string()),
-                ("checks_failed".to_string(), "0".to_string()),
-            ]),
-            warnings: vec!["Consider using dxButton instead of custom button".to_string()],
-            errors: vec![],
-            execution_time: Duration::from_millis(80),
-        })
-    }
-}
+        println!("   Validated {} files - all checks passed", file_count);
 
-/// Simple traffic analyzer for demo purposes
-struct SimpleTrafficAnalyzer;
-
-impl TrafficAnalyzer for SimpleTrafficAnalyzer {
-    fn analyze_change(
-        &self,
-        _file: &Path,
-        _old_content: &str,
-        _new_content: &str,
-    ) -> TrafficBranch {
-        // In a real implementation, this would do:
-        // 1. Parse both versions
-        // 2. Detect conflicts
-        // 3. Decide on traffic branch
-
-        // For demo: randomly assign traffic status
-        use std::collections::hash_map::RandomState;
-        use std::hash::{BuildHasher, Hasher};
-
-        let mut hasher = RandomState::new().build_hasher();
-        hasher.write(std::process::id().to_string().as_bytes());
-        let val = hasher.finish() % 3;
-
-        match val {
-            0 => TrafficBranch::Green,
-            1 => TrafficBranch::Yellow(vec!["Potential style conflict".to_string()]),
-            _ => TrafficBranch::Red(vec!["Breaking API change detected".to_string()]),
-        }
+        let mut output = ToolOutput::success();
+        output.message = format!("Validated {} files - all checks passed", file_count);
+        Ok(output)
     }
 }
 
@@ -245,15 +189,11 @@ impl TrafficAnalyzer for SimpleTrafficAnalyzer {
 async fn monitor_changes(repo_path: &str) -> Result<()> {
     println!("\n📡 Starting Dual-Watcher (LSP + File System)...");
 
-    let watcher = DualWatcher::new(repo_path)?;
-    let mut rx = watcher.subscribe();
+    let mut watcher = DualWatcher::new()?;
+    let mut rx = watcher.receiver();
 
-    // Start watcher in background
-    let watch_handle = tokio::spawn(async move {
-        if let Err(e) = watcher.start().await {
-            eprintln!("Watcher error: {}", e);
-        }
-    });
+    // Start watcher (runs LSP + file system watchers internally)
+    watcher.start(repo_path).await?;
 
     println!("   Watching for changes (Ctrl+C to stop)...\n");
 
@@ -273,8 +213,6 @@ async fn monitor_changes(repo_path: &str) -> Result<()> {
             }
         }
     }
-
-    watch_handle.abort();
     Ok(())
 }
 
@@ -314,33 +252,16 @@ async fn main() -> Result<()> {
 
     // Execute all tools
     println!("\n🔄 Executing tools in dependency order...\n");
-    match orchestrator.execute_all().await {
+    match orchestrator.execute_all() {
         Ok(outputs) => {
             println!("\n✨ Execution complete! Results:\n");
             for output in outputs {
                 let status = if output.success { "✅" } else { "❌" };
                 println!("   {} {}", status, output.message);
-
-                if !output.warnings.is_empty() {
-                    for warning in &output.warnings {
-                        println!("      ⚠️  {}", warning);
-                    }
-                }
-
-                if !output.errors.is_empty() {
-                    for error in &output.errors {
-                        println!("      ❌ {}", error);
-                    }
-                }
-
-                if !output.artifacts.is_empty() {
-                    println!("      📦 Artifacts:");
-                    for (key, value) in &output.artifacts {
-                        println!("         - {}: {}", key, value);
-                    }
-                }
-
-                println!("      ⏱️  Execution time: {:?}", output.execution_time);
+                println!("      Modified: {}", output.files_modified.len());
+                println!("      Created: {}", output.files_created.len());
+                println!("      Deleted: {}", output.files_deleted.len());
+                println!("      ⏱️  Execution time: {}ms", output.duration_ms);
                 println!();
             }
         }
@@ -352,25 +273,21 @@ async fn main() -> Result<()> {
 
     // Demonstrate traffic branch analysis
     println!("🚦 Traffic Branch Analysis:");
-    let analyzer = SimpleTrafficAnalyzer;
-    let branch = analyzer.analyze_change(
-        Path::new("src/components/Button.tsx"),
-        "old content",
-        "new content",
-    );
+    let analyzer = dx_forge::orchestrator::DefaultTrafficAnalyzer;
+    let branch = analyzer.analyze(Path::new("src/components/Button.tsx"))?;
 
     match branch {
         TrafficBranch::Green => println!("   🟢 Green: Safe to auto-update"),
-        TrafficBranch::Yellow(conflicts) => {
+        TrafficBranch::Yellow { conflicts } => {
             println!("   🟡 Yellow: Merge required");
             for conflict in conflicts {
-                println!("      - {}", conflict);
+                println!("      - {}", conflict.reason);
             }
         }
-        TrafficBranch::Red(conflicts) => {
+        TrafficBranch::Red { conflicts } => {
             println!("   🔴 Red: Manual resolution required");
             for conflict in conflicts {
-                println!("      - {}", conflict);
+                println!("      - {}", conflict.reason);
             }
         }
     }

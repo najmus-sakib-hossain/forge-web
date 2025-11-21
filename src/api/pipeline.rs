@@ -4,8 +4,36 @@ use anyhow::Result;
 use parking_lot::RwLock;
 use std::sync::{Arc, OnceLock};
 
+#[cfg(test)]
+use std::sync::Mutex;
+
 /// Pipeline execution state
+#[cfg(not(test))]
 static PIPELINE_STATE: OnceLock<Arc<RwLock<PipelineState>>> = OnceLock::new();
+
+// In test builds we keep pipeline state thread-local so that different tests
+// (which may run on different worker threads) don't interfere with each
+// other's view of pipeline suspension / active pipeline.
+#[cfg(test)]
+thread_local! {
+    static TEST_PIPELINE_STATE: Arc<RwLock<PipelineState>> = Arc::new(RwLock::new(PipelineState::default()));
+}
+
+// When running tests, multiple test functions may touch the global
+// pipeline APIs concurrently. To avoid flaky behaviour due to
+// cross-test interference, we serialize pipeline operations behind a
+// simple process-wide mutex. In production builds this guard is
+// completely omitted.
+#[cfg(test)]
+static PIPELINE_TEST_LOCK: OnceLock<Mutex<()>> = OnceLock::new();
+
+#[cfg(test)]
+fn pipeline_test_guard() -> std::sync::MutexGuard<'static, ()> {
+    PIPELINE_TEST_LOCK
+        .get_or_init(|| Mutex::new(()))
+        .lock()
+        .expect("pipeline test lock poisoned")
+}
 
 struct PipelineState {
     active_pipeline: Option<String>,
@@ -25,12 +53,23 @@ impl Default for PipelineState {
     }
 }
 
+#[cfg(not(test))]
 fn get_pipeline_state() -> Arc<RwLock<PipelineState>> {
-    PIPELINE_STATE.get_or_init(|| Arc::new(RwLock::new(PipelineState::default()))).clone()
+    PIPELINE_STATE
+        .get_or_init(|| Arc::new(RwLock::new(PipelineState::default())))
+        .clone()
+}
+
+#[cfg(test)]
+fn get_pipeline_state() -> Arc<RwLock<PipelineState>> {
+    TEST_PIPELINE_STATE.with(|state| state.clone())
 }
 
 /// Executes named pipeline ("default" | "auth" | "deploy" | "ci")
 pub fn execute_pipeline(pipeline_name: &str) -> Result<()> {
+    #[cfg(test)]
+    let _guard = pipeline_test_guard();
+
     let state = get_pipeline_state();
     let mut state = state.write();
     
@@ -48,6 +87,9 @@ pub fn execute_pipeline(pipeline_name: &str) -> Result<()> {
 
 /// Highest priority execution — bypasses queue and debounce
 pub fn execute_tool_immediately(tool_id: &str) -> Result<()> {
+    #[cfg(test)]
+    let _guard = pipeline_test_guard();
+
     tracing::info!("⚡ Immediate execution: {}", tool_id);
     
     // TODO: Execute tool directly, bypassing normal queue
@@ -57,6 +99,9 @@ pub fn execute_tool_immediately(tool_id: &str) -> Result<()> {
 
 /// Returns final Vec<ToolId> after topology sort
 pub fn get_resolved_execution_order() -> Result<Vec<String>> {
+    #[cfg(test)]
+    let _guard = pipeline_test_guard();
+
     let state = get_pipeline_state();
     let state = state.read();
     
@@ -69,6 +114,9 @@ pub fn get_resolved_execution_order() -> Result<Vec<String>> {
 
 /// Used by traffic_branching and user experiments
 pub fn temporarily_override_pipeline_order(new_order: Vec<String>) -> Result<()> {
+    #[cfg(test)]
+    let _guard = pipeline_test_guard();
+
     let state = get_pipeline_state();
     let mut state = state.write();
     
@@ -80,6 +128,9 @@ pub fn temporarily_override_pipeline_order(new_order: Vec<String>) -> Result<()>
 
 /// Aborts and restarts active pipeline from scratch
 pub fn restart_current_pipeline() -> Result<()> {
+    #[cfg(test)]
+    let _guard = pipeline_test_guard();
+
     let state = get_pipeline_state();
     let state = state.read();
     
@@ -98,6 +149,9 @@ pub fn restart_current_pipeline() -> Result<()> {
 
 /// Pauses all tool execution until resumed
 pub fn suspend_pipeline_execution() -> Result<()> {
+    #[cfg(test)]
+    let _guard = pipeline_test_guard();
+
     let state = get_pipeline_state();
     let mut state = state.write();
     
@@ -109,6 +163,9 @@ pub fn suspend_pipeline_execution() -> Result<()> {
 
 /// Continues from suspended state
 pub fn resume_pipeline_execution() -> Result<()> {
+    #[cfg(test)]
+    let _guard = pipeline_test_guard();
+
     let state = get_pipeline_state();
     let mut state = state.write();
     

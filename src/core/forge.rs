@@ -176,23 +176,6 @@ impl Forge {
     // Tool Lifecycle Management
     // ========================================================================
     
-    /// Register a new DX tool
-    ///
-    /// # Example
-    ///
-    /// ```rust,no_run
-    /// use dx_forge::{Forge, DxTool};
-    ///
-    /// struct MyTool;
-    /// impl DxTool for MyTool {
-    ///     fn name(&self) -> &str { "my-tool" }
-    ///     fn version(&self) -> &str { "1.0.0" }
-    ///     fn priority(&self) -> i32 { 50 }
-    ///     async fn execute(&self, ctx: &dx_forge::ExecutionContext) -> anyhow::Result<dx_forge::ToolOutput> {
-    ///         Ok(dx_forge::ToolOutput::success())
-    ///     }
-    /// }
-    
     /// Get the current status of a tool
     pub fn get_tool_status(&self, id: ToolId) -> Option<ToolStatus> {
         self.lifecycle_manager.read().get_status(id)

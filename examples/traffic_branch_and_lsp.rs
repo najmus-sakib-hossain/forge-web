@@ -205,7 +205,7 @@ export function Button({ children, onClick, variant = "primary" }) {
     println!("\n\n{}", "Part 2: LSP Detection".yellow().bold());
     println!("{}", "─".repeat(80).bright_black());
 
-    use dx_forge::watcher::lsp_detector;
+    use dx_forge::watcher_legacy::lsp_detector;
 
     println!(
         "\n{} Checking for DX editor extension...",

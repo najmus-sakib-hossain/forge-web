@@ -342,3 +342,15 @@ mod tests {
         assert!(deps.contains(&"dx-style".to_string()));
     }
 }
+
+// This file primarily defines reusable example tools that are consumed
+// by other examples (like `full_workflow`). To make Cargo happy when
+// building it as a standalone example target, we provide a tiny stub
+// `main` that just prints a short message.
+
+fn main() {
+    println!(
+        "dx-forge: example_tools – run `cargo run --example full_workflow` or `complete_dx_workflow` to see these tools in action."
+    );
+}
+
